@@ -3,12 +3,13 @@
 import sqlite3
 from datetime import datetime
 import hashlib
+import streamlit as st
 
 def init_db():
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
     
-    # Create tables with all columns - remove DROP statements
+    # Create tables with all columns
     c.execute('''CREATE TABLE IF NOT EXISTS users
                  (username TEXT PRIMARY KEY, 
                   password TEXT,
@@ -27,10 +28,14 @@ def init_db():
                   created_at DATETIME,
                   FOREIGN KEY (username) REFERENCES users(username))''')
     
-    # Create admin account if it doesn't exist
-    admin_username = "helloworld"
-    admin_password = "helloworld"
-    admin_email = "helloworld@gmail.com"
+    # Create admin account if it doesn't exist using secrets
+    try:
+        admin_username = st.secrets["admin"]["username"]
+        admin_password = st.secrets["admin"]["password"]
+        admin_email = st.secrets["admin"]["email"]
+    except KeyError:
+        st.error("Admin credentials not found in secrets. Please configure admin secrets.")
+        return
     
     c.execute("SELECT username FROM users WHERE username=?", (admin_username,))
     if not c.fetchone():
